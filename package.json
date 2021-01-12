@@ -35,6 +35,11 @@
     "test:watch": "WATCH_TEST=1 nodemon --exec npm test",
     "version": "version-changelog CHANGELOG.md && changelog-verify CHANGELOG.md && git add CHANGELOG.md"
   },
+  "dependencies": {
+    "enhanced-resolve": "^5.6.0",
+    "postcss": "^8.2.4",
+    "postcss-import": "^14.0.0"
+  },
   "devDependencies": {
     "changelog-verify": "^1.1.2",
     "eslint": "^7.11.0",
@@ -49,6 +54,7 @@
     "eslint-plugin-promise": "^4.1.1",
     "eslint-plugin-unicorn": "^23.0.0",
     "esm": "^3.0.51",
+    "fibers": "^5.0.0",
     "github-release-from-changelog": "^2.1.1",
     "husky": "^4.3.0",
     "lint-staged": "^10.4.2",
@@ -58,6 +64,7 @@
     "nyc": "^15.1.0",
     "prettier": "^2.1.2",
     "rollup": "^2.32.1",
+    "sass": "^1.32.4",
     "version-changelog": "^3.1.1"
   },
   "engines": {
@@ -72,6 +79,13 @@
     "npm",
     "node_modules"
   ],
+  "nodemonConfig": {
+    "ext": "js,json,css,scss",
+    "ignoreRoot": [
+      ".git",
+      "coverage"
+    ]
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/niksy/sass-module-resolve-importer.git"

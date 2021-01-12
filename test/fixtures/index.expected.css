@@ -1,0 +1,61 @@
+body {
+  background: khaki;
+}
+
+body {
+  background: tomato;
+}
+
+body {
+  background: navajowhite;
+}
+
+body {
+  background: goldenrod;
+}
+
+body {
+  background: plum;
+}
+
+body {
+  background: gainsboro;
+}
+
+body {
+  background: lime;
+}
+
+body {
+  background: papayawhip;
+}
+
+body {
+  background: steelblue;
+}
+
+body {
+  background: plum;
+}
+
+@media print {
+  @import "shadow.css";
+  body {
+    background: magenta;
+  }
+
+  body {
+    background: cornflowerblue;
+  }
+
+  body {
+    background: magenta;
+  }
+
+  body {
+    background: aquamarine;
+  }
+}
+body {
+  background: hotpink;
+}

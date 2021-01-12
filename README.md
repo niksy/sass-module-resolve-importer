@@ -2,7 +2,33 @@
 
 [![Build Status][ci-img]][ci]
 
-Import Sass modules using (enhanced) Node resolve.
+Import Sass modules using
+[(enhanced) Node resolve](https://github.com/webpack/enhanced-resolve).
+
+This allows you to load Sass modules which are installed through npm and are
+located in `node_modules`.
+
+Resolver will look for modules using following `package.json` fields:
+
+-   `exports.sass`
+-   `exports.style`
+-   `exports.browser`
+-   `exports.import`
+-   `exports.require`
+-   `exports.node`
+-   `style`
+-   `browser`
+-   `module`
+-   `main`
+
+⚠️ If found module is CSS file (has `.css` extension) and contains `@import`
+directives, it will be processed with [PostCSS](https://postcss.org/) and
+[`postcss-import`](https://github.com/postcss/postcss-import) plugin. This is
+intentional since imports in classic CSS files can be handled in various ways,
+and Sass has rules for
+[importing CSS](https://sass-lang.com/documentation/at-rules/import#importing-css)
+and
+[plain CSS `@import`s](https://sass-lang.com/documentation/at-rules/import#plain-css-imports).
 
 ## Install
 
@@ -13,79 +39,22 @@ npm install sass-module-resolve-importer --save
 ## Usage
 
 ```js
-// Module usage
-```
+import sass from 'sass';
+import resolver from 'sass-module-resolve-importer';
 
-More usage examples.
+sass.render({
+	file: 'index.scss',
+	importer: [resolver()]
+});
+```
 
 ## API
 
-### methodName(arg, [optionalArg])
+### resolve()
 
-Returns: `Mixed`
+Returns: `Function`
 
-Method description.
-
-#### arg
-
-Type: `Mixed`
-
-arg description.
-
-#### optionalArg
-
-Type: `Object`
-
-optionalArg description.
-
-##### prop1
-
-Type: `String`  
-Default: `'3'`
-
-`prop1` description.
-
-##### prop2
-
-Type: `Number`  
-Default: `3`
-
-##### prop3
-
-Type: `Number[]`  
-Default: `[1, 2, 3]`
-
-##### prop4
-
-Type: `Number[]` `String[]`  
-Default: `['1', '2', '3']`
-
-`prop4` description.
-
-##### prop5
-
-Type: `Function`  
-Default: `noop`
-
-`prop5` description.
-
-Function arguments:
-
--   **arg1** `String` arg1 description
--   **arg2** `Number` arg2 description
--   **arg3** `Element` `Boolean` arg3 description
-
-> Alternative approach
-
-| Property | Type                  | Default           | Description                                              |
-| -------- | --------------------- | ----------------- | -------------------------------------------------------- |
-| `prop1`  | `String`              | `'3'`             | `prop1` description.                                     |
-| `prop2`  | `Number`              | `3`               | `prop2` description.                                     |
-| `prop3`  | `Number[]`            | `[1, 2, 3]`       | `prop3` description.                                     |
-| `prop4`  | `Number[]` `String[]` | `['1', '2', '3']` | `prop4` description.                                     |
-| `prop5`  | `Function`            | `noop`            | `prop5` description. (No function arguments description) |
-
----
+[Sass importer function](https://github.com/sass/node-sass#importer--v200---experimental).
 
 ## License
 
