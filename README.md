@@ -29,6 +29,7 @@ and Sass has rules for
 [importing CSS](https://sass-lang.com/documentation/at-rules/import#importing-css)
 and
 [plain CSS `@import`s](https://sass-lang.com/documentation/at-rules/import#plain-css-imports).
+You can avoid this behavior by using classic `@import url(…)`.
 
 ## Install
 

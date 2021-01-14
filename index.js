@@ -7,24 +7,37 @@ import _import from 'postcss-import';
 import allSettled from '@ungap/promise-all-settled';
 
 export default () => {
+	const { extensions, conditionNames, mainFiles, ...resolveOptions } = {
+		extensions: ['.css'],
+		conditionNames: ['style', 'browser', 'import', 'require', 'node'],
+		mainFields: ['style', 'browser', 'module', 'main'],
+		mainFiles: ['index'],
+		modules: ['node_modules']
+	};
+
 	const resolve = promisify(
 		enhancedResolve.create({
-			extensions: ['.scss', '.css'],
-			conditionNames: [
-				'sass',
-				'style',
-				'browser',
-				'import',
-				'require',
-				'node'
-			],
-			mainFields: ['style', 'browser', 'module', 'main'],
-			mainFiles: ['_index', 'index'],
-			modules: ['node_modules']
+			extensions: ['.scss', ...extensions],
+			conditionNames: ['sass', ...conditionNames],
+			mainFiles: ['_index', ...mainFiles],
+			...resolveOptions
 		})
 	);
 
-	const cssProcessor = postcss([_import()]);
+	const genericResolve = promisify(
+		enhancedResolve.create({
+			extensions,
+			conditionNames,
+			mainFiles,
+			...resolveOptions
+		})
+	);
+
+	const cssProcessor = postcss([
+		_import({
+			resolve: (id, basedir) => genericResolve(basedir, id)
+		})
+	]);
 
 	async function asyncFunction(includePaths, url, previous, done) {
 		let filePath = null;
