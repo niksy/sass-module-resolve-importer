@@ -45,7 +45,14 @@ export default () => {
 			if (previous === 'stdin') {
 				const filePaths = await allSettled.call(
 					Promise,
-					includePaths.map((includePath) => resolve(includePath, url))
+					includePaths
+						.split(':')
+						.map((includePath) =>
+							path.isAbsolute(includePath)
+								? includePath
+								: path.resolve(process.cwd(), includePath)
+						)
+						.map((includePath) => resolve(includePath, url))
 				);
 				filePath = filePaths.find(
 					({ status }) => status === 'fulfilled'
@@ -91,13 +98,6 @@ export default () => {
 
 	return function (...arguments_) {
 		const { includePaths } = this.options;
-		const parsedIncludePaths = includePaths
-			.split(':')
-			.map((includePath) =>
-				path.isAbsolute(includePath)
-					? includePath
-					: path.resolve(process.cwd(), includePath)
-			);
-		asyncFunction(parsedIncludePaths, ...arguments_);
+		asyncFunction(includePaths, ...arguments_);
 	};
 };
