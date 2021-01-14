@@ -2,6 +2,10 @@
 
 ## [Unreleased][]
 
+### Fixed
+
+-   Resolving paths when source is `data`
+
 ## [1.0.0][] - 2021-01-13
 
 ### Added

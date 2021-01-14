@@ -4,6 +4,7 @@ import { promisify } from 'util';
 import enhancedResolve from 'enhanced-resolve';
 import postcss from 'postcss';
 import _import from 'postcss-import';
+import allSettled from '@ungap/promise-all-settled';
 
 export default () => {
 	const resolve = promisify(
@@ -25,10 +26,22 @@ export default () => {
 
 	const cssProcessor = postcss([_import()]);
 
-	async function asyncFunction(url, previous, done) {
+	async function asyncFunction(includePaths, url, previous, done) {
 		let filePath = null;
 		try {
-			filePath = await resolve(path.dirname(previous), url);
+			if (previous === 'stdin') {
+				const filePaths = await allSettled.call(
+					Promise,
+					includePaths.map((includePath) => resolve(includePath, url))
+				);
+				filePath = filePaths.find(
+					({ status }) => status === 'fulfilled'
+				);
+				filePath =
+					typeof filePath !== 'undefined' ? filePath.value : null;
+			} else {
+				filePath = await resolve(path.dirname(previous), url);
+			}
 		} catch (error) {
 			/* istanbul ignore next */
 			filePath = null;
@@ -63,7 +76,9 @@ export default () => {
 		}
 	}
 
-	return (...arguments_) => {
-		asyncFunction(...arguments_);
+	return function (...arguments_) {
+		const { includePaths } = this.options;
+		const parsedIncludePaths = includePaths.split(':');
+		asyncFunction(parsedIncludePaths, ...arguments_);
 	};
 };
