@@ -2,6 +2,8 @@
 
 ## [Unreleased][]
 
+## [1.1.1][] - 2021-01-14
+
 ### Fixed
 
 -   Resolve all include paths to absolute path
@@ -26,3 +28,6 @@
 [unreleased]:
 	https://github.com/niksy/sass-module-resolve-importer/compare/v1.1.0...HEAD
 [1.1.0]: https://github.com/niksy/sass-module-resolve-importer/tree/v1.1.0
+[unreleased]:
+	https://github.com/niksy/sass-module-resolve-importer/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/niksy/sass-module-resolve-importer/tree/v1.1.1
