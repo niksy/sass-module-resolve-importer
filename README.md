@@ -44,7 +44,7 @@ import sass from 'sass';
 import resolver from 'sass-module-resolve-importer';
 
 sass.render({
-	file: 'index.scss',
+	// …
 	importer: [resolver()]
 });
 ```
