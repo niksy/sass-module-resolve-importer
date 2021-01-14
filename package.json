@@ -1,6 +1,6 @@
 {
   "name": "sass-module-resolve-importer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Import Sass modules using (enhanced) Node resolve.",
   "license": "MIT",
   "author": "Ivan Nikolić <niksy5@gmail.com> (http://ivannikolic.com)",
