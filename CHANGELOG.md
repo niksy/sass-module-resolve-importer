@@ -2,6 +2,10 @@
 
 ## [Unreleased][]
 
+### Fixed
+
+-   Resolve all include paths to absolute path
+
 ## [1.1.0][] - 2021-01-14
 
 ### Changed

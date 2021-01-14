@@ -91,7 +91,13 @@ export default () => {
 
 	return function (...arguments_) {
 		const { includePaths } = this.options;
-		const parsedIncludePaths = includePaths.split(':');
+		const parsedIncludePaths = includePaths
+			.split(':')
+			.map((includePath) =>
+				path.isAbsolute(includePath)
+					? includePath
+					: path.resolve(process.cwd(), includePath)
+			);
 		asyncFunction(parsedIncludePaths, ...arguments_);
 	};
 };
