@@ -28,7 +28,8 @@
   "scripts": {
     "build": "rollup --config rollup.config.js",
     "lint": "eslint '{index,lib/**/*,test/**/*}.js'",
-    "module-check": "node -e 'require(\"sass-module-resolve-importer\");' && node --input-type=module -e 'import \"sass-module-resolve-importer\";'",
+    "premodule-check": "[[ $(uname -m) == arm64 && $(which brew) && -f \"$(brew --prefix nvm)/nvm.sh\" ]] && source \"$(brew --prefix nvm)/nvm.sh\" || true && nvm use 16 || true && echo $(dirname $(which node)) > .node",
+    "module-check": "export PATH=$(head .node):$PATH; rm -rf .node && node -e 'require(\"sass-module-resolve-importer\");' && node --input-type=module -e 'import \"sass-module-resolve-importer\";'",
     "prepublishOnly": "npm run build && npm run lint:types && npm run module-check",
     "postpublish": "GITHUB_TOKEN=$GITHUB_RELEASE_TOKEN github-release-from-changelog",
     "release": "np --no-release-draft",
