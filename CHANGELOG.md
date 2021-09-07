@@ -2,6 +2,8 @@
 
 ## [Unreleased][]
 
+## [1.2.0][] - 2021-09-07
+
 ### Added
 
 -   Sync mode support
@@ -41,3 +43,6 @@
 [unreleased]:
 	https://github.com/niksy/sass-module-resolve-importer/compare/v1.1.2...HEAD
 [1.1.2]: https://github.com/niksy/sass-module-resolve-importer/tree/v1.1.2
+[unreleased]:
+	https://github.com/niksy/sass-module-resolve-importer/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/niksy/sass-module-resolve-importer/tree/v1.2.0
