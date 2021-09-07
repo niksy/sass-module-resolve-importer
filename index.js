@@ -1,12 +1,23 @@
-import { promises as fs } from 'fs';
+import _fs, { promises as fs } from 'fs';
 import path from 'path';
 import { promisify } from 'util';
 import enhancedResolve from 'enhanced-resolve';
 import postcss from 'postcss';
 import _import from 'postcss-import';
+import _importSync from 'postcss-import-sync2';
 import allSettled from '@ungap/promise-all-settled';
 
-export default () => {
+function allSettledSync(tasks) {
+	return tasks.map((task) => {
+		try {
+			return { status: 'fulfilled', value: task() };
+		} catch (error) {
+			return { status: 'rejected', reason: error };
+		}
+	});
+}
+
+function createResolvers(sync = false) {
 	const { extensions, conditionNames, mainFiles, ...resolveOptions } = {
 		extensions: ['.css'],
 		conditionNames: ['style', 'browser', 'import', 'require', 'node'],
@@ -15,29 +26,58 @@ export default () => {
 		modules: ['node_modules']
 	};
 
-	const resolve = promisify(
-		enhancedResolve.create({
-			extensions: ['.scss', ...extensions],
-			conditionNames: ['sass', ...conditionNames],
-			mainFiles: ['_index', ...mainFiles],
-			...resolveOptions
-		})
-	);
+	const createResolveOptions = {
+		extensions: ['.scss', ...extensions],
+		conditionNames: ['sass', ...conditionNames],
+		mainFiles: ['_index', ...mainFiles],
+		...resolveOptions
+	};
 
-	const genericResolve = promisify(
-		enhancedResolve.create({
-			extensions,
-			conditionNames,
-			mainFiles,
-			...resolveOptions
-		})
-	);
+	const createGenericResolveOptions = {
+		extensions,
+		conditionNames,
+		mainFiles,
+		...resolveOptions
+	};
 
-	const cssProcessor = postcss([
-		_import({
-			resolve: (id, basedir) => genericResolve(basedir, id)
-		})
-	]);
+	let resolve, genericResolve, cssProcessor;
+
+	if (sync) {
+		resolve = enhancedResolve.create.sync(createResolveOptions);
+		genericResolve = enhancedResolve.create.sync(
+			createGenericResolveOptions
+		);
+		cssProcessor = postcss([
+			_importSync({
+				resolve: (id, basedir) => genericResolve(basedir, id)
+			})
+		]);
+	} else {
+		resolve = promisify(enhancedResolve.create(createResolveOptions));
+		genericResolve = promisify(
+			enhancedResolve.create(createGenericResolveOptions)
+		);
+		cssProcessor = postcss([
+			_import({
+				resolve: (id, basedir) => genericResolve(basedir, id)
+			})
+		]);
+	}
+
+	return {
+		resolve,
+		genericResolve,
+		cssProcessor
+	};
+}
+
+export default () => {
+	const { resolve, genericResolve, cssProcessor } = createResolvers();
+	const {
+		resolve: resolveSync,
+		genericResolve: genericResolveSync,
+		cssProcessor: cssProcessorSync
+	} = createResolvers(true);
 
 	async function asyncFunction(includePaths, url, previous, done) {
 		let filePath = null;
@@ -96,8 +136,70 @@ export default () => {
 		}
 	}
 
-	return function (...arguments_) {
+	function syncFunction(includePaths, url, previous) {
+		let filePath = null;
+		try {
+			if (previous === 'stdin') {
+				const filePaths = allSettledSync.call(
+					null,
+					includePaths
+						.split(':')
+						.map((includePath) =>
+							path.isAbsolute(includePath)
+								? includePath
+								: path.resolve(process.cwd(), includePath)
+						)
+						.map(
+							(includePath) => () => resolveSync(includePath, url)
+						)
+				);
+				filePath = filePaths.find(
+					({ status }) => status === 'fulfilled'
+				);
+				filePath =
+					typeof filePath !== 'undefined' ? filePath.value : null;
+			} else {
+				filePath = resolveSync(path.dirname(previous), url);
+			}
+		} catch (error) {
+			/* istanbul ignore next */
+			filePath = null;
+		}
+
+		/* istanbul ignore next */
+		if (filePath === null) {
+			return null;
+		}
+
+		if (path.extname(filePath) !== '.css') {
+			return { file: filePath };
+		}
+
+		const css = _fs.readFileSync(filePath, 'utf8');
+
+		if (!css.includes('@import')) {
+			return { file: filePath };
+		}
+
+		try {
+			const result = cssProcessorSync.process(css, {
+				from: filePath
+			});
+			return { contents: result.css };
+		} catch (error) {
+			/* istanbul ignore next */
+			return error;
+		}
+	}
+
+	function main(...arguments_) {
 		const { includePaths } = this.options;
 		asyncFunction(includePaths, ...arguments_);
+	}
+	main.sync = function (...arguments_) {
+		const { includePaths } = this.options;
+		return syncFunction(includePaths, ...arguments_);
 	};
+
+	return main;
 };

@@ -23,9 +23,10 @@ Resolver will look for modules using following `package.json` fields:
 
 ⚠️ If found module is CSS file (has `.css` extension) and contains `@import`
 directives, it will be processed with [PostCSS](https://postcss.org/) and
-[`postcss-import`](https://github.com/postcss/postcss-import) plugin. This is
-intentional since imports in classic CSS files can be handled in various ways,
-and Sass has rules for
+[`postcss-import`](https://github.com/postcss/postcss-import) plugin
+([`postcss-import-sync2`](https://github.com/longlho/postcss-import-sync2) for
+synchronous mode). This is intentional since imports in classic CSS files can be
+handled in various ways, and Sass has rules for
 [importing CSS](https://sass-lang.com/documentation/at-rules/import#importing-css)
 and
 [plain CSS `@import`s](https://sass-lang.com/documentation/at-rules/import#plain-css-imports).
@@ -51,10 +52,17 @@ sass.render({
 
 ## API
 
-### resolve()
+### resolver()
 
-Returns: `Function`
+Returns: `function`
 
+[Sass importer function](https://github.com/sass/node-sass#importer--v200---experimental).
+
+### resolver().sync
+
+Returns: `function`
+
+Synchronous
 [Sass importer function](https://github.com/sass/node-sass#importer--v200---experimental).
 
 ## License

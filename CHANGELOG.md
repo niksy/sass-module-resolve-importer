@@ -2,6 +2,10 @@
 
 ## [Unreleased][]
 
+### Added
+
+-   Sync mode support
+
 ## [1.1.2][] - 2021-01-14
 
 ### Changed

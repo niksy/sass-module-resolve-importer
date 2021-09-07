@@ -45,7 +45,8 @@
     "@ungap/promise-all-settled": "^1.1.2",
     "enhanced-resolve": "^5.6.0",
     "postcss": "^8.2.4",
-    "postcss-import": "^14.0.0"
+    "postcss-import": "^14.0.0",
+    "postcss-import-sync2": "^1.1.0"
   },
   "devDependencies": {
     "changelog-verify": "^1.1.2",
