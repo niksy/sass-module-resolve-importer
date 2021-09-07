@@ -5,6 +5,7 @@
 ### Added
 
 -   Sync mode support
+-   TypeScript typings
 
 ## [1.1.2][] - 2021-01-14
 

@@ -3,7 +3,6 @@ import { promisify } from 'util';
 import _fs, { promises as fs } from 'fs';
 import path from 'path';
 import sass from 'sass';
-import Fiber from 'fibers';
 import resolver from '../index';
 
 describe('Async', function () {
@@ -15,7 +14,6 @@ describe('Async', function () {
 			),
 			promisify(sass.render)({
 				file: path.resolve(__dirname, 'fixtures/index.scss'),
-				fiber: Fiber,
 				importer: [resolver()]
 			})
 		]);
@@ -34,7 +32,6 @@ describe('Async', function () {
 			),
 			promisify(sass.render)({
 				data: input,
-				fiber: Fiber,
 				importer: [resolver()],
 				includePaths: [path.resolve(__dirname, 'fixtures')]
 			})

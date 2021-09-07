@@ -1,17 +1,42 @@
+/* eslint-disable jsdoc/no-undefined-types */
+
 import _fs, { promises as fs } from 'fs';
 import path from 'path';
 import { promisify } from 'util';
 import enhancedResolve from 'enhanced-resolve';
 import postcss from 'postcss';
 import _import from 'postcss-import';
+// @ts-ignore
 import _importSync from 'postcss-import-sync2';
+// @ts-ignore
 import allSettled from '@ungap/promise-all-settled';
 
+/**
+ * @typedef {object} SassImporterFunction
+ * @property {object} options
+ * @property {string} options.includePaths
+ */
+
+/**
+ * @typedef {import('sass').Importer} Importer
+ */
+
+/**
+ * @typedef {({status: 'fulfilled', value: any, reason?: undefined}|{status: 'rejected', reason: unknown, value?: undefined})} SettledResult
+ */
+
+/**
+ * @param   {Function[]}      tasks
+ *
+ * @returns {SettledResult[]}
+ */
 function allSettledSync(tasks) {
 	return tasks.map((task) => {
 		try {
 			return { status: 'fulfilled', value: task() };
-		} catch (error) {
+		} catch (/** @type {any} */ error_) {
+			/** @type {Error} */
+			const error = error_;
 			return { status: 'rejected', reason: error };
 		}
 	});
@@ -40,165 +65,220 @@ function createResolvers(sync = false) {
 		...resolveOptions
 	};
 
-	let resolve, genericResolve, cssProcessor;
-
 	if (sync) {
-		resolve = enhancedResolve.create.sync(createResolveOptions);
-		genericResolve = enhancedResolve.create.sync(
+		const resolve = enhancedResolve.create.sync(createResolveOptions);
+		const genericResolve = enhancedResolve.create.sync(
 			createGenericResolveOptions
 		);
-		cssProcessor = postcss([
+		const cssProcessor = postcss([
 			_importSync({
-				resolve: (id, basedir) => genericResolve(basedir, id)
+				resolve: (
+					/** @type {string} */ id,
+					/** @type {string} */ basedir
+				) => genericResolve(basedir, id)
 			})
 		]);
-	} else {
-		resolve = promisify(enhancedResolve.create(createResolveOptions));
-		genericResolve = promisify(
-			enhancedResolve.create(createGenericResolveOptions)
-		);
-		cssProcessor = postcss([
-			_import({
-				resolve: (id, basedir) => genericResolve(basedir, id)
-			})
-		]);
+
+		return {
+			resolve,
+			genericResolve,
+			cssProcessor
+		};
 	}
+
+	/** @type {(basedir: string, id: string) => Promise<string>} */
+	const resolve = promisify(enhancedResolve.create(createResolveOptions));
+	/** @type {(basedir: string, id: string) => Promise<string>} */
+	const genericResolve = promisify(
+		enhancedResolve.create(createGenericResolveOptions)
+	);
+	// @ts-ignore
+	const cssProcessor = postcss([
+		_import({
+			resolve: (id, basedir) => genericResolve(basedir, id)
+		})
+	]);
 
 	return {
 		resolve,
-		genericResolve,
 		cssProcessor
 	};
 }
 
+/**
+ * Sass importer to import Sass modules using (enhanced) Node resolve.
+ */
 export default () => {
-	const { resolve, genericResolve, cssProcessor } = createResolvers();
-	const {
-		resolve: resolveSync,
-		genericResolve: genericResolveSync,
-		cssProcessor: cssProcessorSync
-	} = createResolvers(true);
+	const { resolve, cssProcessor } = createResolvers();
+	const { resolve: resolveSync, cssProcessor: cssProcessorSync } =
+		createResolvers(true);
 
-	async function asyncFunction(includePaths, url, previous, done) {
-		let filePath = null;
-		try {
-			if (previous === 'stdin') {
-				const filePaths = await allSettled.call(
-					Promise,
-					includePaths
-						.split(':')
-						.map((includePath) =>
-							path.isAbsolute(includePath)
-								? includePath
-								: path.resolve(process.cwd(), includePath)
-						)
-						.map((includePath) => resolve(includePath, url))
-				);
-				filePath = filePaths.find(
-					({ status }) => status === 'fulfilled'
-				);
-				filePath =
-					typeof filePath !== 'undefined' ? filePath.value : null;
-			} else {
-				filePath = await resolve(path.dirname(previous), url);
+	/**
+	 * @param {string} includePaths
+	 */
+	function asyncFunction(includePaths) {
+		/** @type {Importer} */
+		return async function (url, previous, done) {
+			/** @type {string?} */
+			let filePath = null;
+			try {
+				if (previous === 'stdin') {
+					/** @type {SettledResult[]} */
+					const filePaths = await allSettled.call(
+						Promise,
+						includePaths
+							.split(':')
+							.map((includePath) =>
+								path.isAbsolute(includePath)
+									? includePath
+									: path.resolve(process.cwd(), includePath)
+							)
+							.map((includePath) => resolve(includePath, url))
+					);
+					const foundFilePath = filePaths.find(
+						({ status }) => status === 'fulfilled'
+					);
+					filePath =
+						typeof foundFilePath !== 'undefined'
+							? foundFilePath.value
+							: null;
+				} else {
+					const foundFilePath = await resolve(
+						path.dirname(previous),
+						url
+					);
+					filePath = foundFilePath || null;
+				}
+			} catch (error) {
+				/* istanbul ignore next */
+				filePath = null;
 			}
-		} catch (error) {
+
 			/* istanbul ignore next */
-			filePath = null;
-		}
+			if (filePath === null) {
+				done(null);
+				return;
+			}
 
-		/* istanbul ignore next */
-		if (filePath === null) {
-			done(null);
-			return;
-		}
+			if (path.extname(filePath) !== '.css') {
+				done({ file: filePath });
+				return;
+			}
 
-		if (path.extname(filePath) !== '.css') {
-			done({ file: filePath });
-			return;
-		}
+			const css = await fs.readFile(filePath, 'utf8');
 
-		const css = await fs.readFile(filePath, 'utf8');
+			if (!css.includes('@import')) {
+				done({ file: filePath });
+				return;
+			}
 
-		if (!css.includes('@import')) {
-			done({ file: filePath });
-			return;
-		}
-
-		try {
-			const result = await cssProcessor.process(css, {
-				from: filePath
-			});
-			done({ contents: result.css });
-		} catch (error) {
-			/* istanbul ignore next */
-			done(error);
-		}
+			try {
+				const result = await cssProcessor.process(css, {
+					from: filePath
+				});
+				done({ contents: result.css });
+			} catch (/** @type {any} */ error_) {
+				/** @type {Error} */
+				const error = error_;
+				/* istanbul ignore next */
+				done(error);
+			}
+		};
 	}
 
-	function syncFunction(includePaths, url, previous) {
-		let filePath = null;
-		try {
-			if (previous === 'stdin') {
-				const filePaths = allSettledSync.call(
-					null,
-					includePaths
-						.split(':')
-						.map((includePath) =>
-							path.isAbsolute(includePath)
-								? includePath
-								: path.resolve(process.cwd(), includePath)
-						)
-						.map(
-							(includePath) => () => resolveSync(includePath, url)
-						)
-				);
-				filePath = filePaths.find(
-					({ status }) => status === 'fulfilled'
-				);
-				filePath =
-					typeof filePath !== 'undefined' ? filePath.value : null;
-			} else {
-				filePath = resolveSync(path.dirname(previous), url);
+	/**
+	 * @param {string} includePaths
+	 */
+	function syncFunction(includePaths) {
+		/** @type {Importer} */
+		return function (url, previous) {
+			/** @type {string?} */
+			let filePath = null;
+			try {
+				if (previous === 'stdin') {
+					const filePaths = allSettledSync.call(
+						null,
+						includePaths
+							.split(':')
+							.map((includePath) =>
+								path.isAbsolute(includePath)
+									? includePath
+									: path.resolve(process.cwd(), includePath)
+							)
+							.map(
+								(includePath) => () =>
+									resolveSync(includePath, url)
+							)
+					);
+					const foundFilePath = filePaths.find(
+						({ status }) => status === 'fulfilled'
+					);
+					filePath =
+						typeof foundFilePath !== 'undefined'
+							? foundFilePath.value
+							: null;
+				} else {
+					const foundFilePath = resolveSync(
+						path.dirname(previous),
+						url
+					);
+					// @ts-ignore
+					filePath = foundFilePath || null;
+				}
+			} catch (error) {
+				/* istanbul ignore next */
+				filePath = null;
 			}
-		} catch (error) {
+
 			/* istanbul ignore next */
-			filePath = null;
-		}
+			if (filePath === null) {
+				return null;
+			}
 
-		/* istanbul ignore next */
-		if (filePath === null) {
-			return null;
-		}
+			if (path.extname(filePath) !== '.css') {
+				return { file: filePath };
+			}
 
-		if (path.extname(filePath) !== '.css') {
-			return { file: filePath };
-		}
+			const css = _fs.readFileSync(filePath, 'utf8');
 
-		const css = _fs.readFileSync(filePath, 'utf8');
+			if (!css.includes('@import')) {
+				return { file: filePath };
+			}
 
-		if (!css.includes('@import')) {
-			return { file: filePath };
-		}
-
-		try {
-			const result = cssProcessorSync.process(css, {
-				from: filePath
-			});
-			return { contents: result.css };
-		} catch (error) {
-			/* istanbul ignore next */
-			return error;
-		}
+			try {
+				const result = cssProcessorSync.process(css, {
+					from: filePath
+				});
+				return { contents: result.css };
+			} catch (/** @type {any} */ error_) {
+				/** @type {Error} */
+				const error = error_;
+				/* istanbul ignore next */
+				return error;
+			}
+		};
 	}
 
+	/**
+	 * Sass importer to import Sass modules using (enhanced) Node resolve.
+	 *
+	 * @this {SassImporterFunction}
+	 * @type {Importer}
+	 */
 	function main(...arguments_) {
 		const { includePaths } = this.options;
-		asyncFunction(includePaths, ...arguments_);
+		asyncFunction(includePaths)(...arguments_);
 	}
+	/**
+	 * Sass importer to import Sass modules using (enhanced) Node resolve. Synchronous version.
+	 *
+	 * @this {SassImporterFunction}
+	 * @type {Importer}
+	 */
 	main.sync = function (...arguments_) {
 		const { includePaths } = this.options;
-		return syncFunction(includePaths, ...arguments_);
+		// @ts-ignore
+		return syncFunction(includePaths)(...arguments_);
 	};
 
 	return main;
