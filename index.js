@@ -12,13 +12,17 @@ import _importSync from 'postcss-import-sync2';
 import allSettled from '@ungap/promise-all-settled';
 
 /**
- * @typedef {object} SassImporterFunction
- * @property {object} options
- * @property {string} options.includePaths
+ * @typedef {import('sass').ImporterReturnType} sass.ImporterReturnType
+ * @typedef {import('sass').Options} sass.Options
  */
 
 /**
- * @typedef {import('sass').Importer} Importer
+ * @typedef {(
+ *   this: { fromImport: boolean, options: { includePaths: string } },
+ *   url: string,
+ *   prev: string,
+ *   done?: (data: sass.ImporterReturnType) => void,
+ *  ) => sass.ImporterReturnType | void} Importer
  */
 
 /**
@@ -108,7 +112,7 @@ function createResolvers(sync = false) {
 /**
  * Sass importer to import Sass modules using (enhanced) Node resolve.
  */
-export default () => {
+function api() {
 	const { resolve, cssProcessor } = createResolvers();
 	const { resolve: resolveSync, cssProcessor: cssProcessorSync } =
 		createResolvers(true);
@@ -118,7 +122,8 @@ export default () => {
 	 */
 	function asyncFunction(includePaths) {
 		/** @type {Importer} */
-		return async function (url, previous, done) {
+		return async function (url, previous, _done) {
+			const done = typeof _done !== 'undefined' ? _done : () => {};
 			/** @type {string?} */
 			let filePath = null;
 			try {
@@ -260,26 +265,28 @@ export default () => {
 	}
 
 	/**
-	 * Sass importer to import Sass modules using (enhanced) Node resolve.
-	 *
-	 * @this {SassImporterFunction}
 	 * @type {Importer}
 	 */
 	function main(...arguments_) {
 		const { includePaths } = this.options;
-		asyncFunction(includePaths)(...arguments_);
+		const [url, previous, done] = arguments_;
+		asyncFunction(includePaths).apply(this, [url, previous, done]);
 	}
 	/**
-	 * Sass importer to import Sass modules using (enhanced) Node resolve. Synchronous version.
-	 *
-	 * @this {SassImporterFunction}
 	 * @type {Importer}
 	 */
-	main.sync = function (...arguments_) {
+	function sync(...arguments_) {
 		const { includePaths } = this.options;
-		// @ts-ignore
-		return syncFunction(includePaths)(...arguments_);
-	};
+		const [url, previous] = arguments_;
+		return syncFunction(includePaths).apply(this, [url, previous]);
+	}
+
+	/**
+	 * Sass importer to import Sass modules using (enhanced) Node resolve. Synchronous version.
+	 */
+	main.sync = sync;
 
 	return main;
-};
+}
+
+export default api;
