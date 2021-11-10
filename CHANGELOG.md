@@ -2,6 +2,11 @@
 
 ## [Unreleased][]
 
+### Changed
+
+-   Upgrade `postcss-import-sync2`
+-   Improve TypeScript typings
+
 ## [1.2.0][] - 2021-09-07
 
 ### Added

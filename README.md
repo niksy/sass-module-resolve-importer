@@ -54,13 +54,13 @@ sass.render({
 
 ### resolver()
 
-Returns: `function`
+Returns: [`sass.Importer`][type-importer]
 
 [Sass importer function](https://github.com/sass/node-sass#importer--v200---experimental).
 
 ### resolver().sync
 
-Returns: `function`
+Returns: [`sass.Importer`][type-importer]
 
 Synchronous
 [Sass importer function](https://github.com/sass/node-sass#importer--v200---experimental).
@@ -73,5 +73,6 @@ MIT © [Ivan Nikolić](http://ivannikolic.com)
 
 [ci]: https://github.com/niksy/sass-module-resolve-importer/actions?query=workflow%3ACI
 [ci-img]: https://github.com/niksy/sass-module-resolve-importer/workflows/CI/badge.svg?branch=master
+[type-importer]: https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/sass/index.d.ts#L15-L20
 
 <!-- prettier-ignore-end -->
