@@ -13,10 +13,6 @@
 	"overrides": [
 		{
 			"files": ["rollup.config.js"],
-			"env": {
-				"node": true,
-				"es6": true
-			},
 			"parserOptions": {
 				"sourceType": "script"
 			},

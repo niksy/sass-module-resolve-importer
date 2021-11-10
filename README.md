@@ -71,7 +71,7 @@ MIT © [Ivan Nikolić](http://ivannikolic.com)
 
 <!-- prettier-ignore-start -->
 
-[ci]: https://travis-ci.com/niksy/sass-module-resolve-importer
-[ci-img]: https://travis-ci.com/niksy/sass-module-resolve-importer.svg?branch=master
+[ci]: https://github.com/niksy/sass-module-resolve-importer/actions?query=workflow%3ACI
+[ci-img]: https://github.com/niksy/sass-module-resolve-importer/workflows/CI/badge.svg?branch=master
 
 <!-- prettier-ignore-end -->

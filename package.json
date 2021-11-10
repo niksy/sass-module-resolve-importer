@@ -28,15 +28,16 @@
   "scripts": {
     "build": "rollup --config rollup.config.js",
     "lint": "eslint '{index,lib/**/*,test/**/*}.js'",
+    "lint:types": "tsc",
     "premodule-check": "[[ $(uname -m) == arm64 && $(which brew) && -f \"$(brew --prefix nvm)/nvm.sh\" ]] && source \"$(brew --prefix nvm)/nvm.sh\" || true && nvm use 16 || true && echo $(dirname $(which node)) > .node",
-    "module-check": "export PATH=$(head .node):$PATH; rm -rf .node && node -e 'require(\"sass-module-resolve-importer\");' && node --input-type=module -e 'import \"sass-module-resolve-importer\";'",
-    "prepublishOnly": "npm run build && npm run lint:types && npm run module-check",
+    "module-check": "node -e 'require(\"sass-module-resolve-importer\");' && node --input-type=module -e 'import \"sass-module-resolve-importer\";'",
+    "prepublishOnly": "npm run build",
     "postpublish": "GITHUB_TOKEN=$GITHUB_RELEASE_TOKEN github-release-from-changelog",
+    "prerelease": "npm run lint && npm run lint:types && npm run build && npm run module-check",
     "release": "np --no-release-draft",
-    "test": "([ -z $WATCH_TEST ] && npm run lint || echo) && nyc mocha --require esm 'test/**/*.js' && nyc check-coverage",
-    "test:watch": "WATCH_TEST=1 nodemon --exec npm test",
-    "version": "if [ $(git rev-parse --abbrev-ref HEAD) == 'master' ]; then version-changelog CHANGELOG.md && changelog-verify CHANGELOG.md && git add CHANGELOG.md; else echo; fi",
-    "lint:types": "tsc"
+    "test": "nyc mocha --require esm 'test/**/*.js' && nyc check-coverage",
+    "test:watch": "nodemon --exec npm test",
+    "version": "if [ $(git rev-parse --abbrev-ref HEAD) == 'master' ]; then version-changelog CHANGELOG.md && changelog-verify CHANGELOG.md && git add CHANGELOG.md; else echo; fi"
   },
   "nodemonConfig": {
     "ignoreRoot": [
@@ -51,7 +52,7 @@
     "enhanced-resolve": "^5.6.0",
     "postcss": "^8.2.4",
     "postcss-import": "^14.0.0",
-    "postcss-import-sync2": "^1.1.0"
+    "postcss-import-sync2": "^1.2.0"
   },
   "devDependencies": {
     "@types/mocha": "^8.2.3",
@@ -77,7 +78,7 @@
     "nodemon": "^2.0.6",
     "np": "^6.5.0",
     "nyc": "^15.1.0",
-    "prettier": "^2.1.2",
+    "prettier": "^2.4.0",
     "rollup": "^2.32.1",
     "sass": "^1.32.4",
     "typescript": "^4.3.5",
