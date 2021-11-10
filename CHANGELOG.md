@@ -2,6 +2,8 @@
 
 ## [Unreleased][]
 
+## [1.3.0][] - 2021-11-10
+
 ### Changed
 
 -   Upgrade `postcss-import-sync2`
@@ -51,3 +53,6 @@
 [unreleased]:
 	https://github.com/niksy/sass-module-resolve-importer/compare/v1.2.0...HEAD
 [1.2.0]: https://github.com/niksy/sass-module-resolve-importer/tree/v1.2.0
+[unreleased]:
+	https://github.com/niksy/sass-module-resolve-importer/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/niksy/sass-module-resolve-importer/tree/v1.3.0
