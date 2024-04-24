@@ -1,3 +1,11 @@
+![Deprecated project](https://img.shields.io/badge/status-deprecated-red.svg)
+
+**This project is deprecated.**
+
+Same feature can be achieved with [official Node package importer](https://sass-lang.com/documentation/js-api/classes/nodepackageimporter/).
+
+---
+
 # sass-module-resolve-importer
 
 [![Build Status][ci-img]][ci]
